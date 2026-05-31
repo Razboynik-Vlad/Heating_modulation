@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ice Cube Rescue</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div>
+    <h1>❄️ Ice Cube Rescue</h1>
+    <p class="sub">Keep the ice from fully melting. Drag tools onto the field, then press Start.</p>
+    <div class="stage">
+      <canvas id="cv"></canvas>
+      <div class="banner" id="banner">
+        <div class="big" id="bannerText">WIN</div>
+        <div id="bannerSub"></div>
+        <button id="bannerBtn">Next</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#ff5a3c"></i>Hot</span>
+      <span><i style="background:#7b8aff"></i>Cold</span>
+      <span><i style="background:#bfe9ff"></i>Ice</span>
+      <span><i style="background:#9a7b4f"></i>Insulator</span>
+      <span><i style="background:#3fd2ff"></i>Cooler</span>
+      <span style="margin-left:auto">Press <b>R</b> to rotate a tool while dragging</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="stat"><span id="levelName">Level</span><b id="levelNo">1/3</b></div>
+    <div class="stat"><span>Time left</span><b id="timeLeft">--</b></div>
+    <div class="stat"><span>Ice remaining</span><b id="icePct">100%</b></div>
+    <div class="bar"><span id="iceBar" style="width:100%"></span></div>
+    <div class="stat" style="margin-top:6px"><span>Need to survive</span><b id="needPct">25%</b></div>
+
+    <div class="tray">
+      <h3>Tools</h3>
+      <div id="toolList"></div>
+    </div>
+
+    <div class="btns">
+      <button id="startBtn">▶ Start</button>
+      <button id="resetBtn" class="ghost">↺ Reset</button>
+    </div>
+    <div class="hint" id="hint"></div>
+  </div>
+
+  <!-- classic scripts share global scope; load order matters, no bundler/server needed -->
+  <script src="js/config.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/sim.js"></script>
+  <script src="js/marching.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
