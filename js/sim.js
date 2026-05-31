@@ -16,7 +16,8 @@ function stamp(r,m,temp){
     if(inBounds(x,y)){ const i=idx(x,y); mat[i]=m; if(temp!==undefined) T[i]=temp; }
 }
 function applyTool(p){
-  const temp = p.type===COOLER ? COOLER_T : AMBIENT;
+  // cooler uses its own configured temp; insulator starts at room ambient
+  const temp = p.type===COOLER ? p.temp : LEVELS[levelIndex].ambient;
   for(let y=p.y;y<p.y+p.h;y++) for(let x=p.x;x<p.x+p.w;x++)
     if(inBounds(x,y)){ const i=idx(x,y); if(mat[i]===AIR){ mat[i]=p.type; T[i]=temp; } }
 }
@@ -28,10 +29,10 @@ function buildLevel(li){
   Tn = new Float32Array(W*H);
   mat = new Uint8Array(W*H);
   latent = new Float32Array(W*H);
-  T.fill(AMBIENT); mat.fill(AIR);
+  T.fill(L.ambient); mat.fill(AIR);
 
-  (L.walls||[]).forEach(r=>stamp(r,INSUL,AMBIENT));   // fixed insulator
-  L.heaters.forEach(r=>stamp(r,HEATER,HEATER_T));     // burners
+  (L.walls||[]).forEach(r=>stamp(r,INSUL,L.ambient)); // fixed insulator
+  L.heaters.forEach(r=>stamp(r,HEATER,r.temp));       // burners — each carries its own temp
 
   let cells=0;
   for(let y=L.ice.y;y<L.ice.y+L.ice.h;y++)
@@ -52,8 +53,8 @@ function substep(){
   for(let y=0;y<H;y++){
     for(let x=0;x<W;x++){
       const i=idx(x,y), mi=mat[i];
-      if(mi===HEATER){ Tn[i]=HEATER_T; continue; }
-      if(mi===COOLER){ Tn[i]=COOLER_T; continue; }
+      if(mi===HEATER){ Tn[i]=T[i]; continue; }   // fixed temp stored in T at stamp time
+      if(mi===COOLER){ Tn[i]=T[i]; continue; }   // fixed temp stored in T at applyTool time
       const ti=T[i], ki=MAT_K[mi], ci=MAT_C[mi];
       // net conductive flux from 4 neighbors, harmonic-mean face conductivity
       let flux=0;
@@ -78,7 +79,7 @@ function substep(){
         }
         continue;
       }
-      if(mi===AIR) tnew += CONVECT*(AMBIENT - tnew)*DT; // convection/radiation approx
+      if(mi===AIR) tnew += CONVECT*(LEVELS[levelIndex].ambient - tnew)*DT; // convection/radiation approx
       Tn[i]=tnew;
     }
   }

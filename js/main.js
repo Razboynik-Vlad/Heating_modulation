@@ -5,11 +5,13 @@
 
 let running = false, finished = false;
 let startRealTime = 0;   // Date.now() when Start pressed; 0 = not started yet
-let finishTime    = 0;   // Date.now() when finished; freezes the timer display
+let gameElapsed   = 0;   // game-time seconds since start (speed-scaled)
+let gameElapsedAtFinish = 0;
 
 let physicsAccumulator = 0;
 let lastPhysicsTime    = 0;   // performance.now() at last physics tick
 const REAL_STEP = 1 / 60;    // seconds per physics step
+let speedMult = 1;            // 1 = normal, 3 = fast-forward
 
 let inv  = [];
 let drag = null;
@@ -29,7 +31,9 @@ setInterval(function () {
   lastPhysicsTime = now;
   if (dt > 30) dt = 30;   // cap: never try to catch up more than 30 s at once
 
-  physicsAccumulator += dt;
+  const scaled = dt * speedMult;
+  physicsAccumulator += scaled;
+  gameElapsed        += scaled;
   while (physicsAccumulator >= REAL_STEP) {
     step();
     physicsAccumulator -= REAL_STEP;
@@ -43,8 +47,7 @@ setInterval(function () {
 // ---------- helpers ----------
 function elapsedSeconds(){
   if (!startRealTime) return 0;
-  // finishTime freezes the clock the moment the game ended
-  return ((finishTime || Date.now()) - startRealTime) / 1000;
+  return finished ? gameElapsedAtFinish : gameElapsed;
 }
 function evtCell(e){
   const r = cv.getBoundingClientRect();
@@ -70,7 +73,7 @@ function renderTray(){
     if (!empty){
       div.addEventListener("pointerdown", e => {
         e.preventDefault();
-        drag = { type: t.type, w: t.w, h: t.h, slot };
+        drag = { type: t.type, w: t.w, h: t.h, slot, temp: t.temp };
         window.addEventListener("pointermove", onDragMove);
         window.addEventListener("pointerup",   onDragUp, { once: true });
       });
@@ -103,7 +106,7 @@ function onDragMove(e){
 function onDragUp(){
   window.removeEventListener("pointermove", onDragMove);
   if (drag && hover && canPlace(hover.x, hover.y, drag.w, drag.h) && inv[drag.slot] > 0){
-    const p = { type: drag.type, x: hover.x, y: hover.y, w: drag.w, h: drag.h, slot: drag.slot };
+    const p = { type: drag.type, x: hover.x, y: hover.y, w: drag.w, h: drag.h, slot: drag.slot, temp: drag.temp };
     placed.push(p); applyTool(p); inv[drag.slot]--;
     renderTray();
   }
@@ -121,7 +124,7 @@ cv.addEventListener("pointerdown", e => {
     const p = placed[k];
     if (c.x >= p.x && c.x < p.x + p.w && c.y >= p.y && c.y < p.y + p.h){
       for (let y = p.y; y < p.y + p.h; y++) for (let x = p.x; x < p.x + p.w; x++)
-        if (inBounds(x, y)){ const i = idx(x, y); if (mat[i] === p.type){ mat[i] = AIR; T[i] = AMBIENT; } }
+        if (inBounds(x, y)){ const i = idx(x, y); if (mat[i] === p.type){ mat[i] = AIR; T[i] = LEVELS[levelIndex].ambient; } }
       inv[p.slot]++; placed.splice(k, 1); renderTray();
       return;
     }
@@ -139,6 +142,10 @@ el("startBtn").onclick = () => {
   }
 };
 el("resetBtn").onclick  = () => loadLevel(levelIndex);
+el("speedBtn").onclick  = () => {
+  speedMult = speedMult === 1 ? 3 : 1;
+  el("speedBtn").textContent = speedMult === 3 ? "⏩ 3×" : "⏩ 1×";
+};
 el("bannerBtn").onclick = () => {
   el("banner").classList.remove("show");
   if (el("bannerText").classList.contains("win")) levelIndex = (levelIndex + 1) % LEVELS.length;
@@ -151,7 +158,7 @@ el("showHint").onclick = () => {
 // ---------- lifecycle ----------
 function loadLevel(li){
   levelIndex = li; running = false; finished = false;
-  startRealTime = 0; finishTime = 0;
+  startRealTime = 0; gameElapsed = 0; gameElapsedAtFinish = 0;
   physicsAccumulator = 0; lastPhysicsTime = 0;
   placed = []; inv = LEVELS[li].tools.map(t => t.count);
   buildLevel(li);
@@ -162,7 +169,7 @@ function loadLevel(li){
 function finish(win){
   if (finished) return;
   finished = true; running = false;
-  finishTime = Date.now();
+  gameElapsedAtFinish = gameElapsed;
   el("bannerText").textContent = win ? "SAVED! ❄️" : "MELTED 💧";
   el("bannerText").className   = "big " + (win ? "win" : "lose");
   el("bannerSub").textContent  = win

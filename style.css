@@ -24,6 +24,12 @@ canvas{
 }
 .stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .stat b{font-variant-numeric:tabular-nums}
+
+#levelName {
+  color: #4aadd9;
+  font-weight: bolder;
+}
+
 .bar{height:12px;border-radius:8px;background:#0a1623;overflow:hidden;margin-top:4px}
 .bar>span{display:block;height:100%;background:linear-gradient(90deg,#54c8ff,#9fe9ff);transition:width .12s linear}
 .tray{margin-top:14px}
