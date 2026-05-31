@@ -61,7 +61,8 @@ function render(drag, hover){
   // 3) crisp ice outline (marching squares)
   const segs=contourSegments();
   ctx.lineWidth=2; ctx.strokeStyle="rgba(230,248,255,.9)"; ctx.beginPath();
-  for(const s of segs){ ctx.moveTo(s[0]*SCALE,s[1]*SCALE); ctx.lineTo(s[2]*SCALE,s[3]*SCALE); }
+  const h=SCALE*0.5;
+  for(const s of segs){ ctx.moveTo(s[0]*SCALE+h,s[1]*SCALE+h); ctx.lineTo(s[2]*SCALE+h,s[3]*SCALE+h); }
   ctx.stroke();
 
   // 4) tool regions

@@ -66,7 +66,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
 
 .section-label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;font-weight:600}
-#levelList{margin-bottom:12px}
+#levelList, #toolList{
+  margin-bottom:12px;
+  max-height: 150px;
+  overflow-y: scroll;
+  scrollbar-width: none;
+}
+
 .level-item{
   display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;
   cursor:pointer;margin-bottom:4px;background:var(--panel2);
