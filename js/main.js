@@ -17,6 +17,36 @@ let inv  = [];
 let drag = null;
 let hover = null;
 
+// ---------- progress ----------
+let progress = { unlocked: 0, completed: [] };
+
+function loadProgress(){
+  try {
+    const s = JSON.parse(localStorage.getItem("iceRescueProgress"));
+    if (s && typeof s.unlocked === "number") progress = s;
+  } catch(e){}
+}
+function saveProgress(){
+  localStorage.setItem("iceRescueProgress", JSON.stringify(progress));
+}
+function renderLevelList(){
+  const list = el("levelList"); list.innerHTML = "";
+  LEVELS.forEach((L, i) => {
+    const unlocked  = i <= progress.unlocked;
+    const completed = progress.completed.includes(i);
+    const active    = i === levelIndex;
+    const div = document.createElement("div");
+    div.className = "level-item" + (active ? " active" : "") + (unlocked ? "" : " locked");
+    div.innerHTML = `<span class="level-num">${i + 1}</span>
+      <span class="level-name">${L.name}</span>
+      ${completed ? '<span class="level-check">✓</span>' : ""}`;
+    if (unlocked){
+      div.addEventListener("click", () => { if (i !== levelIndex) loadLevel(i); });
+    }
+    list.appendChild(div);
+  });
+}
+
 const el = id => document.getElementById(id);
 
 // ---------- physics ticker ----------
@@ -164,12 +194,19 @@ function loadLevel(li){
   buildLevel(li);
   el("banner").classList.remove("show");
   el("hint").classList.remove("active");
-  renderTray(); refreshHUD();
+  renderLevelList(); renderTray(); refreshHUD();
 }
 function finish(win){
   if (finished) return;
   finished = true; running = false;
   gameElapsedAtFinish = gameElapsed;
+  if (win){
+    if (!progress.completed.includes(levelIndex)) progress.completed.push(levelIndex);
+    if (levelIndex + 1 < LEVELS.length && levelIndex + 1 > progress.unlocked)
+      progress.unlocked = levelIndex + 1;
+    saveProgress();
+    renderLevelList();
+  }
   el("bannerText").textContent = win ? "SAVED! ❄️" : "MELTED 💧";
   el("bannerText").className   = "big " + (win ? "win" : "lose");
   el("bannerSub").textContent  = win
@@ -190,5 +227,6 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
+loadProgress();
 loadLevel(0);
 loop();
