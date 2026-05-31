@@ -1,1 +1,5 @@
 melting_env
+.repomixignore
+repomix-output.xml
+Mps-phase-change-simulation
+results
